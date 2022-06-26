@@ -16,7 +16,6 @@
 // under the License.
 
 use clap::{clap_app, value_t};
-use env_logger;
 use log::*;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -28,7 +27,6 @@ use std::os::unix::net::UnixStream;
 #[cfg(unix)]
 use std::path::Path;
 
-use thrift;
 use thrift::protocol::{
     TBinaryInputProtocol, TBinaryOutputProtocol, TCompactInputProtocol, TCompactOutputProtocol,
     TInputProtocol, TMultiplexedOutputProtocol, TOutputProtocol,
@@ -346,16 +344,8 @@ fn make_thrift_calls(
 
     info!("testList");
     {
-        let mut v_snd: Vec<i32> = Vec::new();
-        v_snd.push(29384);
-        v_snd.push(238);
-        v_snd.push(32498);
-
-        let mut v_cmp: Vec<i32> = Vec::new();
-        v_cmp.push(29384);
-        v_cmp.push(238);
-        v_cmp.push(32498);
-
+        let v_snd: Vec<i32> = vec![29384, 238, 32498];
+        let v_cmp: Vec<i32> = vec![29384, 238, 32498];
         verify_expected_result(thrift_test_client.test_list(v_snd), v_cmp)?;
     }
 
@@ -410,7 +400,7 @@ fn make_thrift_calls(
     info!("testMapMap");
     {
         let mut m_cmp_nested_0: BTreeMap<i32, i32> = BTreeMap::new();
-        for i in (-4 as i32)..0 {
+        for i in -4_i32..0 {
             m_cmp_nested_0.insert(i, i);
         }
         let mut m_cmp_nested_1: BTreeMap<i32, i32> = BTreeMap::new();
@@ -456,25 +446,26 @@ fn make_thrift_calls(
         arg_map_usermap.insert(Numberz::ONE, 4289);
         arg_map_usermap.insert(Numberz::EIGHT, 19);
 
-        let mut arg_vec_xtructs: Vec<Xtruct> = Vec::new();
-        arg_vec_xtructs.push(Xtruct {
-            string_thing: Some("foo".to_owned()),
-            byte_thing: Some(8),
-            i32_thing: Some(29),
-            i64_thing: Some(92384),
-        });
-        arg_vec_xtructs.push(Xtruct {
-            string_thing: Some("bar".to_owned()),
-            byte_thing: Some(28),
-            i32_thing: Some(2),
-            i64_thing: Some(-1281),
-        });
-        arg_vec_xtructs.push(Xtruct {
-            string_thing: Some("baz".to_owned()),
-            byte_thing: Some(0),
-            i32_thing: Some(3_948_539),
-            i64_thing: Some(-12_938_492),
-        });
+        let arg_vec_xtructs: Vec<Xtruct> = vec![
+            Xtruct {
+                string_thing: Some("foo".to_owned()),
+                byte_thing: Some(8),
+                i32_thing: Some(29),
+                i64_thing: Some(92384),
+            },
+            Xtruct {
+                string_thing: Some("bar".to_owned()),
+                byte_thing: Some(28),
+                i32_thing: Some(2),
+                i64_thing: Some(-1281),
+            },
+            Xtruct {
+                string_thing: Some("baz".to_owned()),
+                byte_thing: Some(0),
+                i32_thing: Some(3_948_539),
+                i64_thing: Some(-12_938_492),
+            },
+        ];
 
         let mut s_cmp_nested_1: BTreeMap<Numberz, Insanity> = BTreeMap::new();
         let insanity = Insanity {
@@ -492,8 +483,8 @@ fn make_thrift_calls(
         s_cmp_nested_2.insert(Numberz::SIX, empty_insanity);
 
         let mut s_cmp: BTreeMap<UserId, BTreeMap<Numberz, Insanity>> = BTreeMap::new();
-        s_cmp.insert(1 as UserId, s_cmp_nested_1);
-        s_cmp.insert(2 as UserId, s_cmp_nested_2);
+        s_cmp.insert(1_i64, s_cmp_nested_1);
+        s_cmp.insert(2_i64, s_cmp_nested_2);
 
         verify_expected_result(thrift_test_client.test_insanity(insanity), s_cmp)?;
     }
