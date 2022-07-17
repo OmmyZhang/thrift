@@ -1777,29 +1777,35 @@ void t_rs_generator::render_struct_sync_read(
   f_gen_ << indent() << "}" << endl;
 
   // now read all the fields found
-  f_gen_ << indent() << "let field_id = field_id(&field_ident)?;" << endl;
-  f_gen_ << indent() << "match field_id {" << endl; // start match
-  indent_up();
-
-  for (members_iter = members.begin(); members_iter != members.end(); ++members_iter) {
-    t_field* tfield = (*members_iter);
-    f_gen_ << indent() << rust_safe_field_id(tfield->get_key()) << " => {" << endl;
+  // avoid clippy::match_single_binding
+  if (members.empty()) {
+    f_gen_ << indent() << "i_prot.skip(field_ident.field_type)?;" << endl;
+  } else {
+    f_gen_ << indent() << "let field_id = field_id(&field_ident)?;" << endl;
+    f_gen_ << indent() << "match field_id {" << endl; // start match
     indent_up();
-    render_type_sync_read("val", tfield->get_type());
-    f_gen_ << indent() << struct_field_read_temp_variable(tfield) << " = Some(val);" << endl;
+
+    for (members_iter = members.begin(); members_iter != members.end(); ++members_iter) {
+      t_field* tfield = (*members_iter);
+      f_gen_ << indent() << rust_safe_field_id(tfield->get_key()) << " => {" << endl;
+      indent_up();
+      render_type_sync_read("val", tfield->get_type());
+      f_gen_ << indent() << struct_field_read_temp_variable(tfield) << " = Some(val);" << endl;
+      indent_down();
+      f_gen_ << indent() << "}," << endl;
+    }
+
+    // default case (skip fields)
+    f_gen_ << indent() << "_ => {" << endl;
+    indent_up();
+    f_gen_ << indent() << "i_prot.skip(field_ident.field_type)?;" << endl;
     indent_down();
     f_gen_ << indent() << "}," << endl;
+
+    indent_down();
+    f_gen_ << indent() << "};" << endl; // finish match
   }
 
-  // default case (skip fields)
-  f_gen_ << indent() << "_ => {" << endl;
-  indent_up();
-  f_gen_ << indent() << "i_prot.skip(field_ident.field_type)?;" << endl;
-  indent_down();
-  f_gen_ << indent() << "}," << endl;
-
-  indent_down();
-  f_gen_ << indent() << "};" << endl; // finish match
   f_gen_ << indent() << "i_prot.read_field_end()?;" << endl;
   indent_down();
   f_gen_ << indent() << "}" << endl; // finish loop
